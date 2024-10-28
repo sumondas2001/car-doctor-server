@@ -60,13 +60,32 @@ async function run() {
                const result = await servicesCollection.findOne(query, options);
                res.send(result)
           });
-
+          // Booking
           app.post('/bookings', async (req, res) => {
                const booking = req.body;
                const result = await bookingServices.insertOne(booking);
                res.send(result);
 
+          });
+          app.get('/bookings', async (req, res) => {
+               console.log(req.query.email);
+               let query = {};
+               if (req.query?.email) {
+                    query = { email: req.query.email }
+               }
+               const curser = bookingServices.find(query);
+               const result = await curser.toArray();
+               res.send(result)
+          });
+
+          app.delete('/bookings/:id', async (req, res) => {
+               const id = req.params.id;
+               const query = { _id: new ObjectId(id) };
+               const result = await bookingServices.deleteOne(query);
+               res.send(result)
           })
+
+
 
 
           // Send a ping to confirm a successful connection
