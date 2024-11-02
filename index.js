@@ -1,6 +1,9 @@
 const express = require('express');
 const cors = require('cors');
 const app = express();
+const cookieParser = require('cookie-parser')
+const jwt = require('jsonwebtoken');
+
 require('dotenv').config()
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port = process.env.PROT || 5000;
@@ -8,8 +11,12 @@ const port = process.env.PROT || 5000;
 
 // middleWare
 
-app.use(cors());
+app.use(cors({
+     origin: ['http://localhost:5173'],
+     credentials: true
+}));
 app.use(express.json());
+app.use(cookieParser());
 
 
 
@@ -83,9 +90,35 @@ async function run() {
                const query = { _id: new ObjectId(id) };
                const result = await bookingServices.deleteOne(query);
                res.send(result)
+          });
+
+          app.patch('/bookings/:id', async (req, res) => {
+               const id = req.params.id;
+               const filter = { _id: new ObjectId(id) };
+               const updateBooking = req.body;
+               const updateDoc = {
+                    $set: {
+                         status: updateBooking.status
+                    }
+               };
+               const result = await bookingServices.updateOne(filter, updateDoc);
+               res.send(result);
+          });
+
+          app.post('/jwt', async (req, res) => {
+               const user = req.body;
+
+               const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+                    expiresIn: '1h'
+               });
+
+               res
+                    .cookie('token', token, {
+                         httpOnly: true,
+                         secure: false
+                    })
+                    .send({ success: true })
           })
-
-
 
 
           // Send a ping to confirm a successful connection
